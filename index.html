@@ -274,10 +274,14 @@
           )}, Length: ${episodeLength}
             </td></tr>
             <tr><td colspan="3"><hr></td></tr>
-            <tr><td>---</td><td>S1</td><td></td></tr>
           `;
 
-          nextEpisode();
+          if (currentEpisode < totalEpisodes) {
+            tbody.innerHTML += `
+              <tr><td>---</td><td>S1</td><td></td></tr>
+            `;
+            nextEpisode();
+          }
         } else {
           updateEpisodeInfo();
         }
