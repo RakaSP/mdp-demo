@@ -34,7 +34,7 @@
         color: white;
         border: none;
         border-radius: 5px;
-        cursor: pointer;~
+        cursor: pointer;
       }
 
       button:hover {
@@ -127,7 +127,13 @@
               <th>A</th>
             </tr>
           </thead>
-          <tbody id="episodeTableBody"></tbody>
+          <tbody id="episodeTableBody">
+            <tr>
+              <td>---</td>
+              <td>S1</td>
+              <td></td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -137,11 +143,8 @@
       let currentEpisode = 1;
       let state = "S1";
 
-      // Global stats
       let globalTotalReward = 0;
       let globalEpisodeCount = 0;
-
-      // Episode stats
       let episodeTotalReward = 0;
       let episodeLength = 0;
 
@@ -239,37 +242,39 @@
           "stateDisplay"
         ).textContent = `Current State: ${state}`;
         document.getElementById("actionInfo").innerHTML = `
-          Took action: <strong>${action}</strong><br />
           From state: <strong>${prevState}</strong><br />
+          Action: <strong>${action}</strong><br />
           To state: <strong>${state}</strong><br />
-          Reward received: <strong>${reward}</strong><br />
-          Transition probability: <strong>${prob}</strong>
+          Reward: <strong>${reward}</strong><br />
         `;
 
         const tbody = document.getElementById("episodeTableBody");
-        tbody.innerHTML += `
-          <tr><td></td><td>${prevState}</td><td>${action}</td></tr>
-          <tr><td>${reward}</td><td>${state}</td><td></td></tr>
-        `;
+        const lastRow = tbody.lastElementChild;
+        if (lastRow && lastRow.children.length === 3) {
+          lastRow.children[2].textContent = action;
+        }
 
-        // Scroll log to bottom
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `<td>${reward}</td><td>${state}</td><td></td>`;
+        tbody.appendChild(newRow);
+
         const historyDiv = document.querySelector(".history");
         historyDiv.scrollTop = historyDiv.scrollHeight;
 
         updateGlobalInfo();
 
         if (state === "T") {
-          // Episode ends
           globalTotalReward += episodeTotalReward;
           globalEpisodeCount++;
 
-          document.getElementById("episodeTableBody").innerHTML += `
-          <tr><td colspan="3" style="background:#eee; font-weight:bold;">
+          tbody.innerHTML += `
+            <tr><td colspan="3" style="background:#eee; font-weight:bold;">
               Episode ${currentEpisode} ended. Total Reward: ${episodeTotalReward.toFixed(
             2
           )}, Length: ${episodeLength}
             </td></tr>
             <tr><td colspan="3"><hr></td></tr>
+            <tr><td>---</td><td>S1</td><td></td></tr>
           `;
 
           nextEpisode();
@@ -289,11 +294,9 @@
             "All episodes completed.";
           document.getElementById("stateDisplay").textContent =
             "Simulation Complete";
-
           return;
         }
 
-        // Reset episode stats
         episodeTotalReward = 0;
         episodeLength = 0;
         state = "S1";
