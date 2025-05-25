@@ -138,8 +138,7 @@
 
       function updateGlobalInfo() {
         const total = globalTotalReward + episodeTotalReward;
-        const count =
-          globalEpisodeCount + (currentEpisode > 0 && state !== "T" ? 1 : 0);
+        const count = globalEpisodeCount + (currentEpisode > 0 ? 1 : 0);
         const avg = count > 0 ? (total / count).toFixed(2) : 0;
         document.getElementById(
           "globalInfo"
@@ -170,9 +169,12 @@
           "stateDisplay"
         ).textContent = `Current State: ${state}`;
 
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>---</td><td>S1</td><td></td>`;
-        episodeTableBody.appendChild(row);
+        const rowa = document.createElement("tr");
+        rowa.innerHTML = `<tr><td colspan="3"><strong>EPISODE ${currentEpisode}</strong></td></tr>`;
+        const rowb = document.createElement("tr");
+        rowb.innerHTML = `<td>---</td><td>S1</td><td></td>`;
+        episodeTableBody.appendChild(rowa);
+        episodeTableBody.appendChild(rowb);
         updateEpisodeInfo();
         updateGlobalInfo();
       }
@@ -279,11 +281,7 @@
             Episode ${currentEpisode} ended. Total Reward: ${episodeTotalReward}, Length: ${episodeLength}
             </td>`;
           episodeTableBody.appendChild(sumRow);
-          episodeTableBody.insertAdjacentHTML(
-            "beforeend",
-            `<tr><td colspan="3"><hr></td></tr>`
-          );
-
+          document.getElementById("actionInfo").innerHTML = ``;
           if (currentEpisode < totalEpisodes) {
             startBtn.disabled = false;
             startBtn.classList.remove("disabled");
