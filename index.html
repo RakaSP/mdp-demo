@@ -106,13 +106,6 @@
       <div class="history">
         <h3>Episode Log:</h3>
         <table>
-          <thead>
-            <tr>
-              <th>R</th>
-              <th>S</th>
-              <th>A</th>
-            </tr>
-          </thead>
           <tbody id="episodeTableBody"></tbody>
         </table>
       </div>
@@ -172,9 +165,13 @@
         const rowa = document.createElement("tr");
         rowa.innerHTML = `<tr><td colspan="3"><strong>EPISODE ${currentEpisode}</strong></td></tr>`;
         const rowb = document.createElement("tr");
-        rowb.innerHTML = `<td>---</td><td>S1</td><td></td>`;
+        rowb.innerHTML = `<td style="background:#eee;font-weight:bold;">R</td><td style="background:#eee;font-weight:bold;">S</td><td style="background:#eee;font-weight:bold;">A</td>`;
+
+        const rowc = document.createElement("tr");
+        rowc.innerHTML = `<td>---</td><td>S1</td><td></td>`;
         episodeTableBody.appendChild(rowa);
         episodeTableBody.appendChild(rowb);
+        episodeTableBody.appendChild(rowc);
         updateEpisodeInfo();
         updateGlobalInfo();
       }
