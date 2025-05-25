@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MDP Simulator</title>
     <style>
       body {
@@ -14,51 +13,45 @@
         flex-wrap: wrap;
         gap: 30px;
       }
-
       .left-panel,
       .right-panel {
         flex: 1;
         min-width: 300px;
       }
-
       .state-display {
         font-size: 22px;
         margin-bottom: 15px;
       }
-
       button {
         padding: 10px 20px;
         margin-right: 10px;
-        margin-bottom: 10px;
-        background-color: #3498db;
+        background: #3498db;
         color: white;
         border: none;
         border-radius: 5px;
         cursor: pointer;
       }
-
-      button:hover {
-        background-color: #2980b9;
+      button:hover:not(.disabled) {
+        background: #2980b9;
       }
-
+      button.disabled {
+        background: #aaa;
+        cursor: not-allowed;
+      }
+      .global-info,
       .episode-info,
-      .global-info {
+      .action-info {
         margin-top: 10px;
         font-size: 16px;
         color: #333;
       }
-
       .action-info {
-        margin-top: 10px;
-        font-size: 16px;
-        color: #222;
         padding: 10px;
         border: 1px solid #ddd;
         border-radius: 5px;
         background: #f4f4f4;
         min-height: 70px;
       }
-
       .history {
         max-height: 80vh;
         overflow-y: auto;
@@ -67,31 +60,19 @@
         border-radius: 5px;
         background: #f9f9f9;
       }
-
-      .history h3 {
-        margin-top: 0;
-      }
-
       table {
         width: 100%;
         border-collapse: collapse;
         font-size: 14px;
       }
-
       th,
       td {
         border: 1px solid #ccc;
         padding: 6px 8px;
         text-align: center;
       }
-
       th {
-        background-color: #eee;
-      }
-
-      .disabled {
-        background-color: #aaa;
-        cursor: not-allowed;
+        background: #eee;
       }
     </style>
   </head>
@@ -99,8 +80,13 @@
     <div class="left-panel">
       <div class="state-display" id="stateDisplay">Current State: S1</div>
 
-      <button onclick="takeAction('a1')" id="btnA1">Action a1</button>
-      <button onclick="takeAction('a2')" id="btnA2">Action a2</button>
+      <button id="startBtn">Start Episode</button>
+      <button onclick="takeAction('a1')" id="btnA1" class="disabled" disabled>
+        Action a1
+      </button>
+      <button onclick="takeAction('a2')" id="btnA2" class="disabled" disabled>
+        Action a2
+      </button>
 
       <div class="global-info" id="globalInfo">
         Average Reward per Episode: 0<br />
@@ -108,7 +94,7 @@
       </div>
 
       <div class="episode-info" id="episodeInfo">
-        Episode 1 of 5<br />
+        Episode 0 of 5<br />
         Episode Total Reward: 0<br />
         Episode Length: 0
       </div>
@@ -127,60 +113,83 @@
               <th>A</th>
             </tr>
           </thead>
-          <tbody id="episodeTableBody">
-            <tr>
-              <td>---</td>
-              <td>S1</td>
-              <td></td>
-            </tr>
-          </tbody>
+          <tbody id="episodeTableBody"></tbody>
         </table>
       </div>
     </div>
 
     <script>
       const totalEpisodes = 5;
-      let currentEpisode = 1;
+      let currentEpisode = 0;
       let state = "S1";
+      let globalTotalReward = 0,
+        globalEpisodeCount = 0;
+      let episodeTotalReward = 0,
+        episodeLength = 0;
 
-      let globalTotalReward = 0;
-      let globalEpisodeCount = 0;
-      let episodeTotalReward = 0;
-      let episodeLength = 0;
+      const startBtn = document.getElementById("startBtn");
+      const btnA1 = document.getElementById("btnA1");
+      const btnA2 = document.getElementById("btnA2");
+      const episodeTableBody = document.getElementById("episodeTableBody");
 
       function randomValue() {
         return Math.random();
       }
 
       function updateGlobalInfo() {
-        let divisor = globalEpisodeCount + (episodeLength > 0 ? 1 : 0);
-        let avgReward =
-          divisor === 0
-            ? 0
-            : (globalTotalReward + episodeTotalReward) / divisor;
-
-        document.getElementById("globalInfo").innerHTML = `
-          Average Reward per Episode: ${avgReward.toFixed(2)}<br />
-          Total Reward: ${(globalTotalReward + episodeTotalReward).toFixed(2)}
-        `;
+        const total = globalTotalReward + episodeTotalReward;
+        const count =
+          globalEpisodeCount + (currentEpisode > 0 && state !== "T" ? 1 : 0);
+        const avg = count > 0 ? (total / count).toFixed(2) : 0;
+        document.getElementById(
+          "globalInfo"
+        ).innerHTML = `Average Reward per Episode: ${avg}<br/>Total Reward: ${total.toFixed(
+          2
+        )}`;
       }
 
       function updateEpisodeInfo() {
-        document.getElementById("episodeInfo").innerHTML = `
-          Episode ${currentEpisode} of ${totalEpisodes}<br />
-          Episode Total Reward: ${episodeTotalReward.toFixed(2)}<br />
-          Episode Length: ${episodeLength}
-        `;
+        document.getElementById(
+          "episodeInfo"
+        ).innerHTML = `Episode ${currentEpisode} of ${totalEpisodes}<br/>
+           Episode Total Reward: ${episodeTotalReward}<br/>
+           Episode Length: ${episodeLength}`;
       }
+
+      function initEpisode() {
+        // increment episode count
+        currentEpisode++;
+        episodeTotalReward = 0;
+        episodeLength = 0;
+        state = "S1";
+        // enable action buttons
+        btnA1.disabled = btnA2.disabled = false;
+        btnA1.classList.remove("disabled");
+        btnA2.classList.remove("disabled");
+        // log initial row
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>---</td><td>S1</td><td></td>`;
+        episodeTableBody.appendChild(row);
+        updateEpisodeInfo();
+        updateGlobalInfo();
+      }
+
+      startBtn.addEventListener("click", () => {
+        if (currentEpisode < totalEpisodes) {
+          initEpisode();
+          startBtn.disabled = true;
+          startBtn.classList.add("disabled");
+        }
+        console.log(currentEpisode, totalEpisodes);
+      });
 
       function takeAction(action) {
         if (state === "T") return;
-
-        let prevState = state;
-        let rand = randomValue();
-        let reward = 0;
-        let prob = 0;
-
+        const prevState = state;
+        const rand = randomValue();
+        let reward = 0,
+          prob = 0;
+        // transition logic...
         if (state === "S1") {
           if (action === "a1") {
             if (rand < 0.8) {
@@ -196,7 +205,7 @@
               reward = 1;
               prob = 0.05;
             }
-          } else if (action === "a2") {
+          } else {
             if (rand < 0.2) {
               state = "S1";
               reward = -1;
@@ -211,7 +220,7 @@
               prob = 0.15;
             }
           }
-        } else if (state === "S2") {
+        } else {
           if (action === "a1") {
             if (rand < 0.75) {
               state = "S1";
@@ -222,7 +231,7 @@
               reward = 4;
               prob = 0.25;
             }
-          } else if (action === "a2") {
+          } else {
             if (rand < 0.8) {
               state = "S1";
               reward = 2;
@@ -234,80 +243,56 @@
             }
           }
         }
-
         episodeTotalReward += reward;
         episodeLength++;
-
         document.getElementById(
           "stateDisplay"
         ).textContent = `Current State: ${state}`;
-        document.getElementById("actionInfo").innerHTML = `
-          From state: <strong>${prevState}</strong><br />
-          Action: <strong>${action}</strong><br />
-          To state: <strong>${state}</strong><br />
-          Reward: <strong>${reward}</strong><br />
-        `;
-
-        const tbody = document.getElementById("episodeTableBody");
-        const lastRow = tbody.lastElementChild;
-        if (lastRow && lastRow.children.length === 3) {
-          lastRow.children[2].textContent = action;
-        }
-
+        document.getElementById(
+          "actionInfo"
+        ).innerHTML = `From state: <strong>${prevState}</strong><br/>
+           Action: <strong>${action}</strong><br/>
+           To state: <strong>${state}</strong><br/>
+           Reward: <strong>${reward}</strong>`;
+        // update last row's action cell
+        const lastRow = episodeTableBody.lastElementChild;
+        lastRow.cells[2].textContent = action;
+        // append new row
         const newRow = document.createElement("tr");
         newRow.innerHTML = `<td>${reward}</td><td>${state}</td><td></td>`;
-        tbody.appendChild(newRow);
-
-        const historyDiv = document.querySelector(".history");
-        historyDiv.scrollTop = historyDiv.scrollHeight;
-
+        episodeTableBody.appendChild(newRow);
+        // scroll
+        document.querySelector(".history").scrollTop =
+          document.querySelector(".history").scrollHeight;
         updateGlobalInfo();
-
+        // if terminal
         if (state === "T") {
           globalTotalReward += episodeTotalReward;
           globalEpisodeCount++;
-
-          tbody.innerHTML += `
-            <tr><td colspan="3" style="background:#eee; font-weight:bold;">
-              Episode ${currentEpisode} ended. Total Reward: ${episodeTotalReward.toFixed(
-            2
-          )}, Length: ${episodeLength}
-            </td></tr>
-            <tr><td colspan="3"><hr></td></tr>
-          `;
-
+          // summary row
+          const sumRow = document.createElement("tr");
+          sumRow.innerHTML = `
+            <td colspan="3" style="background:#eee;font-weight:bold;">
+            Episode ${currentEpisode} ended. Total Reward: ${episodeTotalReward}, Length: ${episodeLength}
+            </td>`;
+          episodeTableBody.appendChild(sumRow);
+          episodeTableBody.insertAdjacentHTML(
+            "beforeend",
+            `<tr><td colspan="3"><hr></td></tr>`
+          );
+          // reset startBtn if more episodes remain
           if (currentEpisode < totalEpisodes) {
-            tbody.innerHTML += `
-              <tr><td>---</td><td>S1</td><td></td></tr>
-            `;
-            nextEpisode();
+            startBtn.disabled = false;
+            startBtn.classList.remove("disabled");
           }
+          // disable actions
+          btnA1.disabled = btnA2.disabled = true;
+          btnA1.classList.add("disabled");
+          btnA2.classList.add("disabled");
+          updateEpisodeInfo();
         } else {
           updateEpisodeInfo();
         }
-      }
-
-      function nextEpisode() {
-        currentEpisode++;
-        if (currentEpisode > totalEpisodes) {
-          document.getElementById("btnA1").classList.add("disabled");
-          document.getElementById("btnA2").classList.add("disabled");
-          document.getElementById("btnA1").disabled = true;
-          document.getElementById("btnA2").disabled = true;
-          document.getElementById("episodeInfo").textContent =
-            "All episodes completed.";
-          document.getElementById("stateDisplay").textContent =
-            "Simulation Complete";
-          return;
-        }
-
-        episodeTotalReward = 0;
-        episodeLength = 0;
-        state = "S1";
-
-        updateEpisodeInfo();
-        document.getElementById("stateDisplay").textContent =
-          "Current State: S1";
       }
     </script>
   </body>
