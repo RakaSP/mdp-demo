@@ -157,16 +157,19 @@
       }
 
       function initEpisode() {
-        // increment episode count
         currentEpisode++;
         episodeTotalReward = 0;
         episodeLength = 0;
         state = "S1";
-        // enable action buttons
+
         btnA1.disabled = btnA2.disabled = false;
         btnA1.classList.remove("disabled");
         btnA2.classList.remove("disabled");
-        // log initial row
+
+        document.getElementById(
+          "stateDisplay"
+        ).textContent = `Current State: ${state}`;
+
         const row = document.createElement("tr");
         row.innerHTML = `<td>---</td><td>S1</td><td></td>`;
         episodeTableBody.appendChild(row);
@@ -254,22 +257,22 @@
            Action: <strong>${action}</strong><br/>
            To state: <strong>${state}</strong><br/>
            Reward: <strong>${reward}</strong>`;
-        // update last row's action cell
+
         const lastRow = episodeTableBody.lastElementChild;
         lastRow.cells[2].textContent = action;
-        // append new row
+
         const newRow = document.createElement("tr");
         newRow.innerHTML = `<td>${reward}</td><td>${state}</td><td></td>`;
         episodeTableBody.appendChild(newRow);
-        // scroll
+
         document.querySelector(".history").scrollTop =
           document.querySelector(".history").scrollHeight;
         updateGlobalInfo();
-        // if terminal
+
         if (state === "T") {
           globalTotalReward += episodeTotalReward;
           globalEpisodeCount++;
-          // summary row
+
           const sumRow = document.createElement("tr");
           sumRow.innerHTML = `
             <td colspan="3" style="background:#eee;font-weight:bold;">
@@ -280,12 +283,12 @@
             "beforeend",
             `<tr><td colspan="3"><hr></td></tr>`
           );
-          // reset startBtn if more episodes remain
+
           if (currentEpisode < totalEpisodes) {
             startBtn.disabled = false;
             startBtn.classList.remove("disabled");
           }
-          // disable actions
+
           btnA1.disabled = btnA2.disabled = true;
           btnA1.classList.add("disabled");
           btnA2.classList.add("disabled");
