@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MDP Interactive Simulator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px auto;
+        padding: 20px;
+        max-width: 1000px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+      }
+
+      .left-panel,
+      .right-panel {
+        flex: 1;
+        min-width: 300px;
+      }
+
+      .state-display {
+        font-size: 22px;
+        margin-bottom: 15px;
+      }
+
+      button {
+        padding: 10px 20px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;~
+      }
+
+      button:hover {
+        background-color: #2980b9;
+      }
+
+      .episode-info,
+      .global-info {
+        margin-top: 10px;
+        font-size: 16px;
+        color: #333;
+      }
+
+      .action-info {
+        margin-top: 10px;
+        font-size: 16px;
+        color: #222;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #f4f4f4;
+        min-height: 70px;
+      }
+
+      .history {
+        max-height: 80vh;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 5px;
+        background: #f9f9f9;
+      }
+
+      .history h3 {
+        margin-top: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 6px 8px;
+        text-align: center;
+      }
+
+      th {
+        background-color: #eee;
+      }
+
+      .disabled {
+        background-color: #aaa;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="left-panel">
+      <div class="state-display" id="stateDisplay">Current State: S1</div>
+
+      <button onclick="takeAction('a1')" id="btnA1">Action a1</button>
+      <button onclick="takeAction('a2')" id="btnA2">Action a2</button>
+
+      <div class="global-info" id="globalInfo">
+        Average Reward per Episode: 0<br />
+        Total Reward: 0
+      </div>
+
+      <div class="episode-info" id="episodeInfo">
+        Episode 1 of 5<br />
+        Episode Total Reward: 0<br />
+        Episode Length: 0
+      </div>
+
+      <div class="action-info" id="actionInfo"></div>
+    </div>
+
+    <div class="right-panel">
+      <div class="history">
+        <h3>Episode Log:</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>R</th>
+              <th>S</th>
+              <th>A</th>
+            </tr>
+          </thead>
+          <tbody id="episodeTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const totalEpisodes = 5;
+      let currentEpisode = 1;
+      let state = "S1";
+
+      // Global stats
+      let globalTotalReward = 0;
+      let globalEpisodeCount = 0;
+
+      // Episode stats
+      let episodeTotalReward = 0;
+      let episodeLength = 0;
+
+      function randomValue() {
+        return Math.random();
+      }
+
+      function updateGlobalInfo() {
+        let divisor = globalEpisodeCount + (episodeLength > 0 ? 1 : 0);
+        let avgReward =
+          divisor === 0
+            ? 0
+            : (globalTotalReward + episodeTotalReward) / divisor;
+
+        document.getElementById("globalInfo").innerHTML = `
+          Average Reward per Episode: ${avgReward.toFixed(2)}<br />
+          Total Reward: ${(globalTotalReward + episodeTotalReward).toFixed(2)}
+        `;
+      }
+
+      function updateEpisodeInfo() {
+        document.getElementById("episodeInfo").innerHTML = `
+          Episode ${currentEpisode} of ${totalEpisodes}<br />
+          Episode Total Reward: ${episodeTotalReward.toFixed(2)}<br />
+          Episode Length: ${episodeLength}
+        `;
+      }
+
+      function takeAction(action) {
+        if (state === "T") return;
+
+        let prevState = state;
+        let rand = randomValue();
+        let reward = 0;
+        let prob = 0;
+
+        if (state === "S1") {
+          if (action === "a1") {
+            if (rand < 0.8) {
+              state = "S1";
+              reward = 1;
+              prob = 0.8;
+            } else if (rand < 0.95) {
+              state = "S2";
+              reward = 0;
+              prob = 0.15;
+            } else {
+              state = "T";
+              reward = 1;
+              prob = 0.05;
+            }
+          } else if (action === "a2") {
+            if (rand < 0.2) {
+              state = "S1";
+              reward = -1;
+              prob = 0.2;
+            } else if (rand < 0.85) {
+              state = "S2";
+              reward = -1;
+              prob = 0.65;
+            } else {
+              state = "T";
+              reward = 1;
+              prob = 0.15;
+            }
+          }
+        } else if (state === "S2") {
+          if (action === "a1") {
+            if (rand < 0.75) {
+              state = "S1";
+              reward = 4;
+              prob = 0.75;
+            } else {
+              state = "S2";
+              reward = 4;
+              prob = 0.25;
+            }
+          } else if (action === "a2") {
+            if (rand < 0.8) {
+              state = "S1";
+              reward = 2;
+              prob = 0.8;
+            } else {
+              state = "S2";
+              reward = 2;
+              prob = 0.2;
+            }
+          }
+        }
+
+        episodeTotalReward += reward;
+        episodeLength++;
+
+        document.getElementById(
+          "stateDisplay"
+        ).textContent = `Current State: ${state}`;
+        document.getElementById("actionInfo").innerHTML = `
+          Took action: <strong>${action}</strong><br />
+          From state: <strong>${prevState}</strong><br />
+          To state: <strong>${state}</strong><br />
+          Reward received: <strong>${reward}</strong><br />
+          Transition probability: <strong>${prob}</strong>
+        `;
+
+        const tbody = document.getElementById("episodeTableBody");
+        tbody.innerHTML += `
+          <tr><td></td><td>${prevState}</td><td>${action}</td></tr>
+          <tr><td>${reward}</td><td>${state}</td><td></td></tr>
+        `;
+
+        // Scroll log to bottom
+        const historyDiv = document.querySelector(".history");
+        historyDiv.scrollTop = historyDiv.scrollHeight;
+
+        updateGlobalInfo();
+
+        if (state === "T") {
+          // Episode ends
+          globalTotalReward += episodeTotalReward;
+          globalEpisodeCount++;
+
+          document.getElementById("episodeTableBody").innerHTML += `
+          <tr><td colspan="3" style="background:#eee; font-weight:bold;">
+              Episode ${currentEpisode} ended. Total Reward: ${episodeTotalReward.toFixed(
+            2
+          )}, Length: ${episodeLength}
+            </td></tr>
+            <tr><td colspan="3"><hr></td></tr>
+          `;
+
+          nextEpisode();
+        } else {
+          updateEpisodeInfo();
+        }
+      }
+
+      function nextEpisode() {
+        currentEpisode++;
+        if (currentEpisode > totalEpisodes) {
+          document.getElementById("btnA1").classList.add("disabled");
+          document.getElementById("btnA2").classList.add("disabled");
+          document.getElementById("btnA1").disabled = true;
+          document.getElementById("btnA2").disabled = true;
+          document.getElementById("episodeInfo").textContent =
+            "All episodes completed.";
+          document.getElementById("stateDisplay").textContent =
+            "Simulation Complete";
+
+          return;
+        }
+
+        // Reset episode stats
+        episodeTotalReward = 0;
+        episodeLength = 0;
+        state = "S1";
+
+        updateEpisodeInfo();
+        document.getElementById("stateDisplay").textContent =
+          "Current State: S1";
+      }
+    </script>
+  </body>
+</html>
